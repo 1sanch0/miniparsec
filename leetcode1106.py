@@ -1,12 +1,3 @@
-# miniparsec
-
-A small Parser Combinator from scratch in Python.
-
-Heads up: I know nothing about parser combinators, I just read [https://en.wikipedia.org/wiki/Parser_combinator](https://en.wikipedia.org/wiki/Parser_combinator) and went from there. So this is probably wrong lmao.
-
-## Example Leetcode #1106
-
-```python
 from miniparsec import *
 
 spaces0 = Regex(r"\s*")
@@ -53,4 +44,3 @@ print(expr('&(  t, f  , f)')) # False
 print(expr('!(&(f,t))')) # True
 print(expr("&(|(f))")) # False
 print(expr("!(&(f,t))")) # True
-```

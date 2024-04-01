@@ -106,3 +106,14 @@ class Sequence(Parser):
       value, s = parser.parse(s)
       result.append(value)
     return self.func(result), s
+
+class Forward(Parser):
+  def __init__(self):
+    super().__init__()
+    self.parser = Empty()
+
+  def define(self, parser: Parser):
+    self.parser = parser
+
+  def parse(self, s: str):
+    return self.parser.parse(s)
