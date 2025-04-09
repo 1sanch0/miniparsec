@@ -1,4 +1,5 @@
 from typing import Union
+import copy
 import re
 
 class ParserException(Exception):
@@ -16,8 +17,12 @@ class Parser:
     return self.parse(s)
   
   def do(self, func: callable):
-    self.func = func
-    return self
+    p = copy.copy(self)
+    p.func = func
+    return p
+
+  def __repr__(self):
+    return f"Parser({self.__f})"
 
   def __add__(self, other: "Parser"):
     return Sequence(self, other)
@@ -27,6 +32,9 @@ class Parser:
   
   def repeat(self, lower: int, upper: int):
     return Repeat(self, lower, upper)
+  
+  def optional(self):
+    return Repeat(self, 0, 1)
 
 class Repeat(Parser):
   def __init__(self, parser: Parser, lower: int = 0, upper: int = None):
@@ -45,9 +53,12 @@ class Repeat(Parser):
         break
     if len(result) < self.lower:
       raise ParserException(f"Expected at least {self.lower} repetitions, got {len(result)}")
-    if self.upper and len(result) > self.upper:
+    if self.upper is not None and len(result) > self.upper:
       raise ParserException(f"Expected at most {self.upper} repetitions, got {len(result)}")
     return self.func(result), s
+  
+  def __repr__(self):
+    return f"Repeat({self.parser}, {self.lower}, {self.upper})"
 
 class Choice(Parser):
   def __init__(self, *parsers: Parser):
@@ -64,6 +75,9 @@ class Choice(Parser):
       except Exception as e:
         raise e
     raise ParserException(f"None of the parsers matched {s}")
+  
+  def __repr__(self):
+    return f"Choice({', '.join(map(str, self.parsers))})"
 
 class Empty(Parser):
   def __init__(self):
@@ -71,6 +85,9 @@ class Empty(Parser):
 
   def parse(self, s: str):
     return (None, s)
+  
+  def __repr__(self):
+    return "Empty()"
 
 class Terminal(Parser):
   def __init__(self, value: str):
@@ -82,6 +99,9 @@ class Terminal(Parser):
       return (self.func(self.value), s[len(self.value):])
     else:
       raise ParserException(f"Expected \"{self.value}\", got \"{s[:len(self.value)]}\"")
+  
+  def __repr__(self):
+    return f"Terminal({self.value})"
 
 class Regex(Parser):
   def __init__(self, regex: str):
@@ -94,6 +114,9 @@ class Regex(Parser):
       return self.func(match.group(0)), s[len(match.group(0)):]
     else:
       raise ParserException(f"Expected \"{self.regex}\", got \"{s[:len(self.regex)]}\"")
+  
+  def __repr__(self):
+    return f"Regex({self.regex})"
 
 class Sequence(Parser):
   def __init__(self, *parsers: Parser):
@@ -106,6 +129,9 @@ class Sequence(Parser):
       value, s = parser.parse(s)
       result.append(value)
     return self.func(result), s
+  
+  def __repr__(self):
+    return f"Sequence({', '.join(map(str, self.parsers))})"
 
 class Forward(Parser):
   def __init__(self):
@@ -117,3 +143,6 @@ class Forward(Parser):
 
   def parse(self, s: str):
     return self.parser.parse(s)
+  
+  def __repr__(self):
+    return "Forward()"
